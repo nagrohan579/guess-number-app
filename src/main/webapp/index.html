@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Guess the Number</h1>
+        <form method="post" action="guess">
+            <input type="number" name="guess" min="1" max="100" required placeholder="Enter a number (1-100)">
+            <button type="submit">Guess</button>
+        </form>
+        <p class="message"></p>
+        <p>Attempts: 0</p>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti" id="confetti"></div>
+
+    <script>
+        function createRealisticConfetti() {
+            const confettiContainer = document.getElementById('confetti');
+            confettiContainer.innerHTML = ''; // Clear existing confetti
+            confettiContainer.style.display = 'block';
+
+            const colors = [
+                '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', 
+                '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
+                '#10ac84', '#ee5a24', '#0abde3', '#f368e0', '#fad390',
+                '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e', '#e17055',
+                '#74b9ff', '#0984e3', '#00b894', '#00cec9', '#6c5ce7',
+                '#a29bfe', '#fd79a8', '#fdcb6e', '#e84393', '#2d3436'
+            ];
+
+            const shapes = ['square', 'rect', 'string', 'circle', 'triangle'];
+            const animations = ['confetti-fall', 'confetti-left', 'confetti-right', 'confetti-center'];
+
+            // Create 150 confetti pieces for a more realistic effect
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                const shape = shapes[Math.floor(Math.random() * shapes.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const animation = animations[Math.floor(Math.random() * animations.length)];
+                
+                confetti.className = `confetti-piece confetti-${shape}`;
+                
+                // Set color based on shape
+                if (shape === 'triangle') {
+                    confetti.style.borderBottomColor = color;
+                } else {
+                    confetti.style.backgroundColor = color;
+                }
+
+                // Random positioning across the top of the screen
+                const startPos = Math.random() * 120 - 10; // -10% to 110% for off-screen start
+                confetti.style.left = startPos + '%';
+                confetti.style.top = Math.random() * -100 - 50 + 'px'; // Start higher for more dramatic effect
+
+                // Random animation duration for varied speeds (1.5s to 4s)
+                const duration = (Math.random() * 2.5 + 1.5) + 's';
+                
+                // Random delay for staggered effect
+                const delay = Math.random() * 2 + 's';
+                
+                // Random drift amount (-200px to 200px)
+                const drift = (Math.random() * 400 - 200) + 'px';
+                
+                // Random rotation (360deg to 1080deg)
+                const rotation = (Math.random() * 720 + 360) + 'deg';
+                
+                // Set CSS custom properties
+                confetti.style.setProperty('--drift', drift);
+                confetti.style.setProperty('--rotation', rotation);
+                
+                confetti.style.animation = `${animation} ${duration} linear ${delay} infinite`;
+                
+                // Add some opacity variation
+                confetti.style.opacity = Math.random() * 0.3 + 0.7; // 0.7 to 1.0
+                
+                confettiContainer.appendChild(confetti);
+            }
+
+            // Stop confetti after 6 seconds
+            setTimeout(() => {
+                confettiContainer.style.display = 'none';
+            }, 6000);
+        }
+
+        // Function to trigger confetti (will be called by servlet when user wins)
+        function triggerConfetti() {
+            createRealisticConfetti();
+        }
+    </script>
+</body>
+</html>
