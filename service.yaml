@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: guess-number-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: guess-number-app
   ports:

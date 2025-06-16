@@ -53,11 +53,10 @@ pipeline {
     stage('Deploying App to Kubernetes') {
       steps {
         script {
-          kubernetesDeploy(configs: "deployment.yaml,service.yaml", kubeconfigId: "kubernetes")
+          kubernetesDeploy(configs: "deployment.yaml,service.yaml", kubeconfigId: "gke_deployer-credentials")
         }
       }
     }
-
   }
 
 }
