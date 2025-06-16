@@ -37,11 +37,19 @@ pipeline {
     }
 
     stage('Deploying App to Kubernetes') {
+      environment {
+        PROJECT_ID = 'gke-guess-number-app'
+        CLUSTER_NAME = 'gke-guess-number-game'
+        LOCATION = 'us-central1-c'
+        CREDENTIALS_ID = 'gke-deployer-credentials'
+      }
       steps {
-        withKubeConfig([credentialsId: 'gke-deployer-credentials']) {
-          sh 'kubectl apply -f deployment.yaml'
-          sh 'kubectl apply -f service.yaml'
-        }
+        echo "Deployment started ..."
+        sh 'ls -ltr'
+        sh 'pwd'
+        sh "sed -i 's/tagversion/${env.BUILD_ID}/g' deployment.yaml"
+        step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
+        echo "Deployment Finished ..."
       }
     }
   }
