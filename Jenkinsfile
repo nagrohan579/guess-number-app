@@ -38,7 +38,7 @@ pipeline {
 
     stage('Deploying App to Kubernetes') {
       steps {
-        withKubeConfig([credentialsId: 'gke_deployer-credentials']) {
+        withKubeConfig([credentialsId: 'gke-deployer-credentials']) {
           sh 'kubectl apply -f deployment.yaml'
           sh 'kubectl apply -f service.yaml'
         }
