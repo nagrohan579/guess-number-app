@@ -45,20 +45,14 @@ pipeline {
         NAMESPACE = 'default'
       }
       steps {
-        step(withKubeConfig([credentialsId: env.CREDENTIALS_ID,
+        step([$class: 'KubernetesEngineBuilder',
+          projectId: env.PROJECT_ID,
           clusterName: env.CLUSTER_NAME,
-          namespace: env.NAMESPACE
-        ]){
-          sh '''
-            echo "Deployment started ..."
-            curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
-            chmod u+x ./kubectl
-            ./kubectl apply -f deployment.yaml
-            ./kubectl apply -f service.yaml
-            echo "Deployment completed successfully!"
-          '''
-        }
-        )
+          location: env.LOCATION,
+          manifestPattern: 'k8s/',
+          credentialsId: env.CREDENTIALS_ID,
+          verifyDeployments: true
+        ])
       }
     }
   }
