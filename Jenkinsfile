@@ -39,8 +39,9 @@ pipeline {
     stage('Deploying App to Kubernetes') {
       agent{
         docker{
-          image: 'bitnami/kubectl:latest'
-          args: '-u root:root'
+          image 'bitnami/kubectl:latest'
+          args '-u root:root'
+          reuseNode true
         }
       }
       environment {
