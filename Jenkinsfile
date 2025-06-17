@@ -6,7 +6,8 @@ pipeline {
     PROJECT_ID      = 'gke-guess-number-app'
     CLUSTER_NAME    = 'gke-guess-number-game'
     LOCATION        = 'us-central1-c'
-    CREDENTIALS_ID  = 'gke-deployer-credentials'
+    GCLOUD_CREDS    = credentials('gcloud-creds')   // your service account JSON
+    DOCKER_CREDS    = 'dockerhub-credentials'       // your DockerHub creds ID
     NAMESPACE       = 'default'
   }
 
@@ -26,12 +27,9 @@ pipeline {
     }
 
     stage('Pushing Image') {
-      environment {
-        registryCredential = 'dockerhub-credentials'
-      }
       steps {
         script {
-          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
+          docker.withRegistry('https://registry.hub.docker.com', DOCKER_CREDS) {
             dockerImage.push("latest")
           }
         }
@@ -41,23 +39,21 @@ pipeline {
     stage('Deploying App to Kubernetes') {
       steps {
         script {
-          // Fetch GKE API server endpoint
-          env.SERVER_URL = sh(
-            script: "gcloud container clusters describe ${CLUSTER_NAME} --zone ${LOCATION} --project ${PROJECT_ID} --format='value(endpoint)'",
-            returnStdout: true
-          ).trim()
-        }
-        // Use withKubeConfig inside declarative steps
-        withKubeConfig([
-          credentialsId: CREDENTIALS_ID,
-          serverUrl: "https://${env.SERVER_URL}",
-          clusterName: CLUSTER_NAME,
-          namespace: NAMESPACE
-        ]) {
-          // Ensure kubectl is present if not installed on agent
+          // Activate service account using the injected JSON file
+          sh """
+            gcloud auth activate-service-account --key-file=$GCLOUD_CREDS
+            gcloud config set project $PROJECT_ID
+            gcloud config set compute/zone $LOCATION
+          """
+
+          // Get cluster credentials locally (sets up kubectl config)
+          sh "gcloud container clusters get-credentials $CLUSTER_NAME --zone $LOCATION --project $PROJECT_ID"
+
+          // Ensure kubectl is present (or pre-install on agent image)
           sh 'curl -LO "https://dl.k8s.io/release/v1.20.5/bin/linux/amd64/kubectl"'
           sh 'chmod u+x kubectl'
-          // Deploy both deployment.yaml and service.yaml
+
+          // Deploy app manifests
           sh './kubectl apply -f k8s/'
         }
       }
