@@ -37,6 +37,12 @@ pipeline {
     }
 
     stage('Deploying App to Kubernetes') {
+      agent{
+        docker{
+          image: bitnami/kubectl:latest
+          args: '-u root:root'
+        }
+      }
       environment {
         PROJECT_ID = 'gke-guess-number-app'
         CLUSTER_NAME = 'gke-guess-number-game'
