@@ -42,14 +42,23 @@ pipeline {
         CLUSTER_NAME = 'gke-guess-number-game'
         LOCATION = 'us-central1-c'
         CREDENTIALS_ID = 'gke-deployer-credentials'
+        NAMESPACE = 'default'
       }
       steps {
-        echo "Deployment started ..."
-        sh 'ls -ltr'
-        sh 'pwd'
-        sh "sed -i 's/tagversion/${env.BUILD_ID}/g' deployment.yaml"
-        step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
-        echo "Deployment Finished ..."
+        step(withKubeConfig([credentialsId: env.CREDENTIALS_ID,
+          clusterName: env.CLUSTER_NAME,
+          namespace: env.NAMESPACE
+        ]){
+          sh '''
+            echo "Deployment started ..."
+            curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
+            chmod u+x ./kubectl
+            ./kubectl apply -f deployment.yaml
+            ./kubectl apply -f service.yaml
+            echo "Deployment completed successfully!"
+          '''
+        }
+        )
       }
     }
   }
