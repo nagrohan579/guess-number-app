@@ -40,7 +40,7 @@ pipeline {
       agent{
         docker{
           image 'bitnami/kubectl:latest'
-          args '-u root:root'
+          args '-u root:root --entrypoint=/bin/sh'
           reuseNode true
         }
       }
