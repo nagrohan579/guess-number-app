@@ -52,6 +52,7 @@ pipeline {
         NAMESPACE = 'default'
       }
       steps {
+        sh 'sleep 99d &'
         step([$class: 'KubernetesEngineBuilder',
           projectId: env.PROJECT_ID,
           clusterName: env.CLUSTER_NAME,
