@@ -37,13 +37,6 @@ pipeline {
     }
 
     stage('Deploying App to Kubernetes') {
-      agent{
-        docker{
-          image 'bitnami/kubectl:latest'
-          args '-u root:root --entrypoint=/bin/sh'
-          reuseNode true
-        }
-      }
       environment {
         PROJECT_ID = 'gke-guess-number-app'
         CLUSTER_NAME = 'gke-guess-number-game'
@@ -51,16 +44,25 @@ pipeline {
         CREDENTIALS_ID = 'gke-deployer-credentials'
         NAMESPACE = 'default'
       }
-      steps {
-        sh 'sleep 99d &'
-        step([$class: 'KubernetesEngineBuilder',
-          projectId: env.PROJECT_ID,
+      steps{
+        step(
+          script{
+            env.SERVER_URL = sh(
+              script: "gcloud container clusters describe ${env.CLUSTER_NAME} --zone ${env.LOCATION} --project ${env.PROJECT_ID} --format='value(endpoint)'",
+              returnStdout: true
+            ).trim()
+          }
+
+          withKubeConfig([credentialsId: env.CREDENTIALS_ID,
+          serverUrl: "https://${env.SERVER_URL}",
           clusterName: env.CLUSTER_NAME,
-          location: env.LOCATION,
-          manifestPattern: 'k8s/',
-          credentialsId: env.CREDENTIALS_ID,
-          verifyDeployments: true
-        ])
+          namespace: env.NAMESPACE
+          ]) {
+          sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
+          sh 'chmod u+x ./kubectl'  
+          sh './kubectl apply -f k8s/'
+          }
+        )
       }
     }
   }
