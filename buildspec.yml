@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17  
+    commands:
+      - echo Installing Maven...
+      - curl -sSL https://apache.osuosl.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz | tar xz
+      - export M2_HOME=$PWD/apache-maven-3.8.6
+      - export PATH=$M2_HOME/bin:$PATH
+  pre_build:
+    commands:
+      - echo Logging in to Docker Hub...
+      - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - echo Running Maven build...
+      - mvn clean package -DskipTests
+  build:
+    commands:
+      - echo Building Docker image...
+      - docker build -t $DOCKERHUB_USERNAME/guess-number-app:latest .
+  post_build:
+    commands:
+      - echo Pushing image to Docker Hub...
+      - docker push $DOCKERHUB_USERNAME/guess-number-app:latest
+artifacts:
+  files:
+    - target/*.jar
