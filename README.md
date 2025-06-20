@@ -17,5 +17,3 @@ mvn clean package
 
 ## Run
 Deploy the generated WAR file from `target/` to your servlet container (e.g., Tomcat).
-
-New line
